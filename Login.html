@@ -1,1 +1,155 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ETB Pips - Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #081522;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #132638;
+      padding: 30px;
+      border-radius: 15px;
+      width: 85%;
+      max-width: 380px;
+      text-align: center;
+    }
+    h1 { color: #20c997; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      margin: 10px 0;
+      border: 1px solid #34516a;
+      border-radius: 7px;
+      background: #081522;
+      color: white;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 7px;
+      background: #20c997;
+      color: #081522;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .switch {
+      color: #20c997;
+      cursor: pointer;
+    }
+    #message { font-size: 14px; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ETB Pips</h1>
+    <p id="heading">Welcome Back</p>
+
+    <form id="authForm">
+      <input id="email" type="email"
+        placeholder="Email address" required>
+
+      <input id="password" type="password"
+        placeholder="Password (minimum 6 characters)"
+        minlength="6" required>
+
+      <button id="submitButton" type="submit">Login</button>
+    </form>
+
+    <p id="message"></p>
+
+    <p>
+      <span id="switchText">Don't have an account?</span>
+      <span class="switch" id="switchMode">Sign Up</span>
+    </p>
+
+    <a href="index.html" style="color:#20c997">
+      Back to Home
+    </a>
+  </div>
+
+  <script>
+    const SUPABASE_URL =
+      "https://bvpckueogvsmqpsivsgu.supabase.co";
+
+    const SUPABASE_KEY =
+      "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+
+    const supabase = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    let isSignup = false;
+
+    const form = document.getElementById("authForm");
+    const message = document.getElementById("message");
+
+    document.getElementById("switchMode").onclick = () => {
+      isSignup = !isSignup;
+
+      document.getElementById("heading").textContent =
+        isSignup ? "Create Your Account" : "Welcome Back";
+
+      document.getElementById("submitButton").textContent =
+        isSignup ? "Create Account" : "Login";
+
+      document.getElementById("switchText").textContent =
+        isSignup ? "Already have an account?" :
+        "Don't have an account?";
+
+      document.getElementById("switchMode").textContent =
+        isSignup ? "Login" : "Sign Up";
+
+      message.textContent = "";
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      message.textContent = "Please wait...";
+
+      let result;
+
+      if (isSignup) {
+        result = await supabase.auth.signUp({
+          email,
+          password
+        });
+      } else {
+        result = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+      }
+
+      if (result.error) {
+        message.textContent = result.error.message;
+        return;
+      }
+
+      message.textContent = isSignup
+        ? "Account created! Check your email if confirmation is required."
+        : "Login successful! Welcome to ETB Pips.";
+    });
+  </script>
+</body>
+</html>
+
