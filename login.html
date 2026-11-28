@@ -145,9 +145,12 @@
         return;
       }
 
-      message.textContent = isSignup
-        ? "Account created! Check your email if confirmation is required."
-        : "Login successful! Welcome to ETB Pips.";
+      if (isSignup) {
+  message.textContent = "Account created! Check your email if confirmation is required.";
+} else {
+  message.textContent = "Login successful! Welcome to ETB Pips.";
+  window.location.href = "index.html";
+      }
     });
   </script>
 </body>
