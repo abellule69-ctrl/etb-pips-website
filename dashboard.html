@@ -4,286 +4,329 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ETB Pips Trading Dashboard</title>
-
+<title>ETB Pips Demo Terminal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://s3.tradingview.com/tv.js"></script>
-
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  padding: 16px;
-  background: #101827;
-  color: white;
-  font-family: Arial, sans-serif;
-}
-
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-h1 { color: #20d6a0; }
-
-.panel {
-  background: #1c293b;
-  padding: 18px;
-  border-radius: 12px;
-  margin: 18px 0;
-}
-
-.balance {
-  font-size: 30px;
-  font-weight: bold;
-  color: #20d6a0;
-}
-
-button, select, input {
-  padding: 12px;
-  border-radius: 7px;
-  border: none;
-  margin: 5px 0;
-}
-
-button {
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.logout { background: #475569; }
-.buy { background: #0baf75; }
-.sell { background: #dc4444; }
-
-select, input {
-  background: #fff;
-  color: #111;
-  width: 100%;
-  max-width: 300px;
-}
-
-#tradingview_chart {
-  width: 100%;
-  height: 450px;
-}
-
-.notice { color: #f6c66a; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-td, th {
-  text-align: left;
-  padding: 10px;
-  border-bottom: 1px solid #39485c;
-}
+*{box-sizing:border-box}
+body{margin:0;padding:15px;background:#101827;color:white;font-family:Arial,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+h1{color:#20d6a0}
+.panel{background:#1c293b;padding:16px;border-radius:12px;margin:15px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{background:#26364b;padding:13px;border-radius:9px}
+.stat strong{display:block;font-size:21px;margin-top:7px}
+.green{color:#20d6a0}
+.red{color:#ff6666}
+small,.muted{color:#aab7c8}
+button,select,input{padding:12px;border-radius:7px;border:0;margin:5px 0}
+button{color:white;font-weight:bold;cursor:pointer}
+select,input{width:100%;max-width:100%;background:#fff;color:#111}
+.buy{background:#0baf75}
+.sell{background:#dc4444}
+.close{background:#475569}
+.logout{background:#475569}
+#tradingview_chart{width:100%;height:380px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:520px}
+td,th{text-align:left;padding:10px;border-bottom:1px solid #39485c}
+.notice{color:#f6c66a;font-size:13px;line-height:1.5}
+.price{font-size:27px;font-weight:bold}
+@media(max-width:500px){body{padding:10px}.grid{grid-template-columns:1fr 1fr}#tradingview_chart{height:320px}}
 </style>
 </head>
-
 <body>
 
 <header>
-  <h1>ETB PIPS</h1>
-  <button class="logout" onclick="logout()">Logout</button>
+<h1>ETB PIPS</h1>
+<button class="logout" onclick="logout()">Logout</button>
 </header>
 
 <div class="panel">
-  <h3>My Demo Account</h3>
-  <div class="balance" id="balance">10,000 ETB</div>
-  <small>Simulated account balance</small>
+<h3>Demo Account</h3>
+<div class="grid">
+<div class="stat">Balance<strong id="balance">10,000 ETB</strong></div>
+<div class="stat">Equity<strong id="equity">10,000 ETB</strong></div>
+<div class="stat">Floating P/L<strong id="floating">0.00 ETB</strong></div>
+<div class="stat">Open Positions<strong id="positionCount">0</strong></div>
+</div>
 </div>
 
 <div class="panel">
-  <h3>Forex Market</h3>
-
-  <label>Select trading pair</label><br>
-
-  <select id="pairSelector" onchange="changePair()">
-    <option value="OANDA:EURUSD">EURUSD</option>
-    <option value="OANDA:GBPUSD">GBPUSD</option>
-    <option value="OANDA:USDJPY">USDJPY</option>
-    <option value="OANDA:EURJPY">EURJPY</option>
-    <option value="OANDA:GBPJPY">GBPJPY</option>
-    <option value="OANDA:AUDUSD">AUDUSD</option>
-    <option value="OANDA:USDCAD">USDCAD</option>
-    <option value="OANDA:USDCHF">USDCHF</option>
-    <option value="OANDA:XAUUSD">XAUUSD - Gold</option>
-    <option value="BITSTAMP:BTCUSD">BTCUSD - Bitcoin</option>
-  </select>
-
-  <div id="tradingview_chart"></div>
-
-  <p class="notice">
-    Market chart provided by TradingView. Data availability and
-    delays depend on the symbol and provider.
-  </p>
+<h3>Market Chart</h3>
+<select id="pair" onchange="changePair()">
+<option value="EURUSD">EURUSD</option>
+<option value="GBPUSD">GBPUSD</option>
+<option value="USDJPY">USDJPY</option>
+<option value="EURJPY">EURJPY</option>
+<option value="GBPJPY">GBPJPY</option>
+<option value="AUDUSD">AUDUSD</option>
+<option value="USDCAD">USDCAD</option>
+<option value="USDCHF">USDCHF</option>
+<option value="XAUUSD">XAUUSD - Gold</option>
+<option value="BTCUSD">BTCUSD - Bitcoin</option>
+</select>
+<div id="tradingview_chart"></div>
+<p class="notice">TradingView chart data may be delayed. Demo execution prices below are simulated separately.</p>
 </div>
 
 <div class="panel">
-  <h3>Demo Trading Terminal</h3>
+<h3>Demo Order</h3>
+<p id="currentPair">EURUSD</p>
+<div class="price" id="currentPrice">1.08000</div>
+<small>Simulated execution price</small>
 
-  <p>Selected pair: <strong id="selectedPair">EURUSD</strong></p>
+<label>Lot size</label>
+<input id="lots" type="number" value="0.01" min="0.01" max="10" step="0.01">
 
-  <label>Trade size (lots)</label><br>
-  <input id="lots" type="number" value="0.01"
-         min="0.01" step="0.01">
+<label>Stop Loss (pips, optional)</label>
+<input id="sl" type="number" min="0" placeholder="Example: 20">
 
-  <br>
-  <button class="buy" onclick="trade('BUY')">BUY</button>
-  <button class="sell" onclick="trade('SELL')">SELL</button>
+<label>Take Profit (pips, optional)</label>
+<input id="tp" type="number" min="0" placeholder="Example: 40">
 
-  <p id="message"></p>
+<div class="grid">
+<button class="buy" onclick="openTrade('BUY')">BUY</button>
+<button class="sell" onclick="openTrade('SELL')">SELL</button>
+</div>
+<p id="message"></p>
+<p class="notice">Demo P/L uses an illustrative rate of 100 ETB per pip per 1.00 lot. This is not a broker's actual pip valuation.</p>
 </div>
 
 <div class="panel">
-  <h3>Open Demo Positions</h3>
-  <div id="trades">No open positions.</div>
+<h3>Open Positions</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Pair</th><th>Type</th><th>Lots</th><th>Entry</th><th>Current</th><th>P/L ETB</th><th>Action</th></tr></thead>
+<tbody id="positions">
+<tr><td colspan="7">No open positions</td></tr>
+</tbody>
+</table>
+</div>
 </div>
 
 <div class="panel">
-  <h3>Trade History</h3>
-  <div id="history">No trades yet.</div>
+<h3>Trade History</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Pair</th><th>Type</th><th>Lots</th><th>Result ETB</th><th>Closed</th></tr></thead>
+<tbody id="history">
+<tr><td colspan="5">No completed trades</td></tr>
+</tbody>
+</table>
+</div>
 </div>
 
-<p class="notice">
-  ETB Pips prototype. Demo orders only. No real broker execution,
-  deposits, withdrawals, or profit calculations are connected.
-</p>
+<p class="notice">ETB Pips V1 Demo. Simulated trading only. No real broker orders, deposits, withdrawals, or real-money payouts are connected.</p>
 
 <script>
-const SUPABASE_URL =
-  "https://bvpckueogvsmqpsivsgu.supabase.co";
+const SUPABASE_URL="https://bvpckueogvsmqpsivsgu.supabase.co";
+const SUPABASE_KEY="sb_publishable_u_L6_dLTgz6XMlJnMv5eJA_qrQ109OP";
+const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const SUPABASE_KEY =
-  "sb_publishable_u_L6_dLTgz6XMlJnMv5eJA_qrQ109OP";
+let balance=10000;
+let positions=[];
+let history=[];
+let pair="EURUSD";
 
-const client = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const settings={
+ EURUSD:{price:1.08000,pip:0.0001,step:0.00004,tv:"OANDA:EURUSD"},
+ GBPUSD:{price:1.27000,pip:0.0001,step:0.00005,tv:"OANDA:GBPUSD"},
+ USDJPY:{price:150.000,pip:0.01,step:0.004,tv:"OANDA:USDJPY"},
+ EURJPY:{price:162.000,pip:0.01,step:0.004,tv:"OANDA:EURJPY"},
+ GBPJPY:{price:190.000,pip:0.01,step:0.005,tv:"OANDA:GBPJPY"},
+ AUDUSD:{price:0.66000,pip:0.0001,step:0.00004,tv:"OANDA:AUDUSD"},
+ USDCAD:{price:1.35000,pip:0.0001,step:0.00004,tv:"OANDA:USDCAD"},
+ USDCHF:{price:0.90000,pip:0.0001,step:0.00004,tv:"OANDA:USDCHF"},
+ XAUUSD:{price:2650.00,pip:0.1,step:0.3,tv:"OANDA:XAUUSD"},
+ BTCUSD:{price:90000,pip:1,step:8,tv:"BITSTAMP:BTCUSD"}
+};
 
-let balance = 10000;
-let trades = [];
-let history = [];
-
-async function checkLogin() {
-  const { data, error } = await client.auth.getSession();
-
-  if (error || !data.session) {
-    window.location.href = "login.html";
-  }
+async function checkLogin(){
+ const {data,error}=await client.auth.getSession();
+ if(error||!data.session) location.href="login.html";
 }
 
-async function logout() {
-  await client.auth.signOut();
-  window.location.href = "login.html";
+async function logout(){
+ await client.auth.signOut();
+ location.href="login.html";
 }
 
-function loadChart(symbol) {
-  const container = document.getElementById("tradingview_chart");
-  container.innerHTML = "";
-
-  if (!window.TradingView) {
-    container.textContent =
-      "Chart is loading. Please refresh if it does not appear.";
-    return;
-  }
-
-  new TradingView.widget({
-    autosize: true,
-    symbol: symbol,
-    interval: "15",
-    timezone: "Africa/Addis_Ababa",
-    theme: "dark",
-    style: "1",
-    locale: "en",
-    enable_publishing: false,
-    allow_symbol_change: true,
-    container_id: "tradingview_chart"
-  });
+function changePair(){
+ pair=document.getElementById("pair").value;
+ document.getElementById("currentPair").textContent=pair;
+ updatePrice();
+ loadChart();
 }
 
-function changePair() {
-  const symbol =
-    document.getElementById("pairSelector").value;
-
-  document.getElementById("selectedPair").textContent =
-    symbol.split(":")[1];
-
-  loadChart(symbol);
+function loadChart(){
+ const box=document.getElementById("tradingview_chart");
+ box.innerHTML="";
+ if(!window.TradingView){
+   box.textContent="Chart is unavailable. Please refresh.";
+   return;
+ }
+ new TradingView.widget({
+   autosize:true,
+   symbol:settings[pair].tv,
+   interval:"15",
+   timezone:"Africa/Addis_Ababa",
+   theme:"dark",
+   style:"1",
+   locale:"en",
+   allow_symbol_change:true,
+   container_id:"tradingview_chart"
+ });
 }
 
-function trade(direction) {
-  const lots = Number(document.getElementById("lots").value);
-  const message = document.getElementById("message");
-
-  if (!Number.isFinite(lots) || lots < 0.01) {
-    message.textContent = "Enter a valid lot size.";
-    return;
-  }
-
-  const symbol =
-    document.getElementById("pairSelector").value.split(":")[1];
-
-  const item = {
-    direction: direction,
-    lots: lots,
-    symbol: symbol,
-    time: new Date().toLocaleTimeString()
-  };
-
-  trades.push(item);
-  history.push(item);
-
-  message.textContent =
-    direction + " demo order opened for " + symbol + ".";
-
-  render();
+function formatPrice(value){
+ const digits=settings[pair].pip===0.01?3:
+              settings[pair].pip===1?2:5;
+ return value.toFixed(digits);
 }
 
-function closeTrade(index) {
-  const closed = trades.splice(index, 1)[0];
-
-  history.push({
-    ...closed,
-    time: "Closed " + new Date().toLocaleTimeString()
-  });
-
-  render();
+function updatePrice(){
+ document.getElementById("currentPrice").textContent=
+   formatPrice(settings[pair].price);
 }
 
-function render() {
-  document.getElementById("balance").textContent =
-    balance.toLocaleString() + " ETB";
+function openTrade(direction){
+ const lots=Number(document.getElementById("lots").value);
+ const sl=Number(document.getElementById("sl").value)||0;
+ const tp=Number(document.getElementById("tp").value)||0;
+ const message=document.getElementById("message");
 
-  document.getElementById("trades").innerHTML =
-    trades.length
-      ? trades.map((t, i) =>
-        `<p>${t.symbol} — ${t.direction} — ${t.lots} lots
-        <button class="logout" onclick="closeTrade(${i})">
-        Close</button></p>`
-      ).join("")
-      : "No open positions.";
+ if(!Number.isFinite(lots)||lots<0.01||lots>10){
+   message.textContent="Enter a lot size between 0.01 and 10.";
+   return;
+ }
+ if(sl<0||tp<0){
+   message.textContent="Stop Loss and Take Profit must be positive.";
+   return;
+ }
 
-  document.getElementById("history").innerHTML =
-    history.length
-      ? history.map(t =>
-        `<p>${t.symbol} — ${t.direction} — ${t.lots}
-        lots — ${t.time}</p>`
-      ).join("")
-      : "No trades yet.";
+ const entry=settings[pair].price;
+ const riskPips=sl*lots*100;
+ if(riskPips>balance){
+   message.textContent="Insufficient demo balance for this illustrative stop-loss risk.";
+   return;
+ }
+
+ positions.push({
+   id:Date.now()+Math.random(),
+   pair,
+   direction,
+   lots,
+   entry,
+   sl,
+   tp,
+   opened:new Date().toLocaleTimeString()
+ });
+
+ message.textContent=direction+" "+pair+" demo position opened!";
+ render();
+}
+
+function getPips(position){
+ const difference=settings[position.pair].price-position.entry;
+ const direction=position.direction==="BUY"?1:-1;
+ return difference/settings[position.pair].pip*direction;
+}
+
+function getProfit(position){
+ return getPips(position)*position.lots*100;
+}
+
+function closePosition(id,reason="Manual close"){
+ const index=positions.findIndex(p=>p.id===id);
+ if(index===-1)return;
+
+ const position=positions.splice(index,1)[0];
+ const profit=getProfit(position);
+ balance+=profit;
+
+ history.unshift({
+   ...position,
+   result:profit,
+   closed:new Date().toLocaleTimeString(),
+   reason
+ });
+ render();
+}
+
+function checkStops(){
+ [...positions].forEach(position=>{
+   const pips=getPips(position);
+   if(position.sl>0&&pips<=-position.sl){
+     closePosition(position.id,"Stop Loss");
+   }else if(position.tp>0&&pips>=position.tp){
+     closePosition(position.id,"Take Profit");
+   }
+ });
+}
+
+function money(value){
+ return value.toLocaleString("en-US",{
+   minimumFractionDigits:2,
+   maximumFractionDigits:2
+ })+" ETB";
+}
+
+function render(){
+ const floating=positions.reduce((sum,p)=>sum+getProfit(p),0);
+
+ document.getElementById("balance").textContent=money(balance);
+ document.getElementById("equity").textContent=money(balance+floating);
+
+ const floatEl=document.getElementById("floating");
+ floatEl.textContent=money(floating);
+ floatEl.className=floating>=0?"green":"red";
+
+ document.getElementById("positionCount").textContent=positions.length;
+
+ document.getElementById("positions").innerHTML=
+ positions.length?positions.map(p=>{
+   const profit=getProfit(p);
+   const cls=profit>=0?"green":"red";
+   return `<tr>
+   <td>${p.pair}</td>
+   <td>${p.direction}</td>
+   <td>${p.lots.toFixed(2)}</td>
+   <td>${p.entry.toFixed(5)}</td>
+   <td>${settings[p.pair].price.toFixed(5)}</td>
+   <td class="${cls}">${money(profit)}</td>
+   <td><button class="close" onclick="closePosition(${p.id})">Close</button></td>
+   </tr>`;
+ }).join(""):'<tr><td colspan="7">No open positions</td></tr>';
+
+ document.getElementById("history").innerHTML=
+ history.length?history.map(p=>{
+   const cls=p.result>=0?"green":"red";
+   return `<tr>
+   <td>${p.pair}</td><td>${p.direction}</td>
+   <td>${p.lots.toFixed(2)}</td>
+   <td class="${cls}">${money(p.result)}</td>
+   <td>${p.closed} (${p.reason})</td>
+   </tr>`;
+ }).join(""):'<tr><td colspan="5">No completed trades</td></tr>';
+}
+
+function simulateMarket(){
+ Object.keys(settings).forEach(symbol=>{
+   const s=settings[symbol];
+   const movement=(Math.random()*2-1)*s.step;
+   s.price=Math.max(s.pip,s.price+movement);
+ });
+ updatePrice();
+ checkStops();
+ render();
 }
 
 checkLogin();
+loadChart();
+updatePrice();
 render();
-loadChart("OANDA:EURUSD");
+setInterval(simulateMarket,1000);
 </script>
-
 </body>
 </html>
