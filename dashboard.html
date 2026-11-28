@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ETB Pips Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:white;font-family:Arial,sans-serif;padding:20px}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+h1{color:#20d6a0}
+button{padding:12px 18px;border:0;border-radius:7px;color:white;font-weight:bold;cursor:pointer;margin:5px}
+.logout{background:#475569}
+.panel{background:#1c293b;padding:20px;border-radius:12px;margin:18px 0}
+.balance{font-size:32px;color:#20d6a0;font-weight:bold}
+.price{font-size:25px}
+.buy{background:#0baf75}
+.sell{background:#dc4444}
+input{padding:12px;width:100%;max-width:220px;border-radius:6px;border:0;margin:8px 0}
+small{color:#aab7c8}
+table{width:100%;border-collapse:collapse}
+td,th{text-align:left;padding:10px;border-bottom:1px solid #39485c}
+.notice{color:#f6c66a}
+</style>
+</head>
+<body>
+
+<header>
+<h1>ETB PIPS</h1>
+<button class="logout" onclick="logout()">Logout</button>
+</header>
+
+<div class="panel">
+<h3>My Demo Account</h3>
+<div class="balance" id="balance">10,000 ETB</div>
+<small>Simulated balance only — not real money</small>
+</div>
+
+<div class="panel">
+<h3>Trading Terminal</h3>
+<p>XAUUSD — Gold / US Dollar</p>
+<div class="price">Demo Price: $2,345.60</div>
+<p class="notice">Illustrative price. Not a live market quote.</p>
+
+<label>Trade size (lots)</label><br>
+<input id="lots" type="number" value="0.01" min="0.01" step="0.01">
+
+<br>
+<button class="buy" onclick="trade('BUY')">BUY</button>
+<button class="sell" onclick="trade('SELL')">SELL</button>
+<p id="message"></p>
+</div>
+
+<div class="panel">
+<h3>Open Demo Trades</h3>
+<div id="trades">No open trades yet.</div>
+</div>
+
+<div class="panel">
+<h3>Trade History</h3>
+<div id="history">No trades yet.</div>
+</div>
+
+<p class="notice">ETB Pips early demo version. Trades and balances are temporary and are not connected to a broker or real payments.</p>
+
+<script>
+const SUPABASE_URL = "https://bvpckueogvsmqpsivsgu.supabase.co";
+const SUPABASE_KEY = "sb_publishable_u_L6_dLTgz6XMlJnMv5eJA_qrQ109OP";
+
+const client = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let balance = 10000;
+let trades = [];
+let history = [];
+
+async function checkLogin(){
+  const {data, error} = await client.auth.getSession();
+
+  if(error || !data.session){
+    window.location.href = "login.html";
+    return;
+  }
+}
+
+async function logout(){
+  await client.auth.signOut();
+  window.location.href = "login.html";
+}
+
+function trade(direction){
+  const lots = Number(document.getElementById("lots").value);
+  const message = document.getElementById("message");
+
+  if(!Number.isFinite(lots) || lots < 0.01){
+    message.textContent = "Enter a valid lot size.";
+    return;
+  }
+
+  const item = {
+    direction: direction,
+    lots: lots,
+    symbol: "XAUUSD",
+    time: new Date().toLocaleTimeString()
+  };
+
+  trades.push(item);
+  history.push(item);
+
+  message.textContent = direction + " demo order opened.";
+  render();
+}
+
+function render(){
+  document.getElementById("balance").textContent =
+    balance.toLocaleString() + " ETB";
+
+  document.getElementById("trades").innerHTML =
+    trades.length
+    ? trades.map((t,i)=>
+      `<p>${t.symbol} — ${t.direction} — ${t.lots} lots
+      <button class="logout" onclick="closeTrade(${i})">Close</button></p>`
+    ).join("")
+    : "No open trades yet.";
+
+  document.getElementById("history").innerHTML =
+    history.length
+    ? history.map(t=>
+      `<p>${t.symbol} — ${t.direction} — ${t.lots} lots — ${t.time}</p>`
+    ).join("")
+    : "No trades yet.";
+}
+
+function closeTrade(index){
+  const closed = trades.splice(index,1)[0];
+  history.push({...closed, time: "Closed " + new Date().toLocaleTimeString()});
+  render();
+}
+
+checkLogin();
+render();
+</script>
+
+</body>
+</html>
